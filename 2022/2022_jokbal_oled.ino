@@ -143,13 +143,13 @@ void oled_display(enum displays st)
   if(st==NAME)
   {
       u8g2.firstPage();
-      do {
+      do
+      {
         u8g2.drawXBMP( 0, 0, 128, 64, dog_name);
       } while(u8g2.nextPage());
   }
   else if(st==MOTOR)
-  {
-      /*******************************MOTOR DEGREE DISPLAY*******************************/
+  {/**************************MOTOR DEGREE DISPLAY**************************/
       char leftmotor[4][8];//={0};//모터 각도 int=>string
       char rightmotor[4][8];//={0};
       
@@ -171,8 +171,7 @@ void oled_display(enum displays st)
       while( u8g2.nextPage() );
   }
   else if(st==SENSOR)
-  {
-      u8g2.clearBuffer();
+  {/***************************SENSOR INPUT DISPLAY***************************/
       char sensor[8][4];//={0};
       char *sensorName[8]={"G_x","G_y","G_z","G_a","EMG1","A6","A7","A8"};
       
@@ -183,7 +182,6 @@ void oled_display(enum displays st)
       
       for(line=0; line<4; line++)
       {
-        
         u8g2.setCursor(0,   start_cursor + (line+1)*line_width);  u8g2.print(sensorName[line]);
         u8g2.setCursor(27,  start_cursor + (line+1)*line_width);  u8g2.print(sensor[line]);
         u8g2.setCursor(73,  start_cursor + (line+1)*line_width);  u8g2.print(sensorName[line+4]);
