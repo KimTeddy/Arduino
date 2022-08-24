@@ -1,4 +1,12 @@
+#include <Arduino.h>
 #include <U8g2lib.h>
+
+#ifdef U8X8_HAVE_HW_SPI
+#include <SPI.h>
+#endif
+#ifdef U8X8_HAVE_HW_I2C
+#include <Wire.h>
+#endif
 
 #define SERIAL
 
@@ -94,18 +102,22 @@ static const unsigned char dog_name[] U8X8_PROGMEM = {// '220728밤thedog-001', 
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x07, 0x00, 0x00, 0x00, 
   0x00, 0x00, 0x00, 0x00
 };
-unsigned short pos[8] = {1,2,3,4,5,6,7,180};
+
+short value[16] = {0};
 
 //화면 전환
 unsigned long nowTime=0; // 현재 시간 저장
 unsigned long pastTime=0; // 과거 시간 저장
 
-enum displays {NAME, MOTOR, SENSOR, VOID};
+enum displays {NAME, SENSOR, MOTOR, VOID};
 enum displays state = NAME;
 
 //OLED
-U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, SCL, SDA);
+//U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, SCL, SDA);
 //U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, 16, 17);
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ 0, /* data=*/ 2);   // ESP32 Thing, HW I2C with pin remapping
+
+void serial_analysis();
 void oled_display(enum displays);
 
 void setup()
@@ -113,88 +125,120 @@ void setup()
 #ifdef SERIAL
   Serial.begin(9600);
 #endif
+  
   //OLED setup
   u8g2.begin();
-  u8g2.enableUTF8Print();
-  u8g2.setFontDirection(0);
-
+  
+  u8g2.clearBuffer();
   oled_display(NAME);
-  u8g2.setFont(u8g2_font_t0_13b_tf);//너비7/높이13/2425qkdlxm
+  u8g2.sendBuffer();
+  
+  u8g2.setFont(u8g2_font_t0_13b_tf);//너비7/높이13/2425BYTE
 }
 #ifdef SERIAL
-int refresh=0;
+int count=0;
 #endif
+bool norefresh=0;
 
+
+
+/**********************************loop()**********************************/
 void loop()
 {
+  //if (Serial.available())
+    
 /*******************************OLED Change*******************************/
   nowTime = millis(); // 현재 시간을 저장
 
-  if((nowTime - pastTime) >= ((1000)*3))
+  if( (nowTime - pastTime) >= ((1000)*(state+1)) )
   { /*지정 시간 지나면*/
     pastTime = nowTime;
-    state = state + 1;
-    if(state == VOID) state= NAME;
+    
+    if(state == NAME) state = SENSOR;
+    else if(state == SENSOR) state = MOTOR;
+    else if(state == MOTOR) state = NAME;
   }
+  u8g2.clearBuffer();
+  serial_analysis();
   oled_display(state);
-  pos[0]++;pos[1]--;pos[2]++;pos[3]+=2;pos[4]+=3;pos[5]-=2;
+  u8g2.sendBuffer();
   
-#ifdef SERIAL
-  refresh++;
-  Serial.println(refresh);
+#ifdef SERIAL_TEST
+  count++;
+  Serial.println(count);
 #endif
 }/*******************************END of LOOP*******************************/
 
+
+/***************************serial_analysis()*****************************/
+void serial_analysis()
+{
+  Serial.println('O');
+  //delay(100);
+  String inString = Serial.readStringUntil('\n');//"123 234 345 456 567 678 789 890 321 432 543 654 765 876 987 098\n";//
+  int index[17];
+  
+  index[0] = inString.indexOf('/');
+  for(int num = 1; num<=15; num++)
+    index[num] = inString.indexOf('/',index[num-1]+1);
+  index[16] = inString.length();
+
+  value[0] = inString.substring(0, index[0]).toInt();
+  for(int num = 1; num<=15; num++)
+    value[num] = inString.substring(index[num-1]+1, index[num]).toInt();
+
+  //Serial.println(Serial.readStringUntil('\n'));
+}
+
+
+/*********************void oled_display(enum displays st)********************/
 void oled_display(enum displays st)
 {
   short line=0;
-  u8g2.firstPage();
+  
   if(st==NAME)
   {
-      //u8g2.firstPage();
-      do{
-        u8g2.drawXBMP( 0, 0, 128, 64, dog_name);
-      } while( u8g2.nextPage() );
+    u8g2.drawXBMP( 0, 0, 128, 64, dog_name);
   }
-  else if(st==MOTOR)
-  {/**************************MOTOR DEGREE DISPLAY**************************/
-      char leftmotor[4][5];//={0};//모터 각도 int=>string
-      char rightmotor[4][5];//={0};
-      const char *buf[8] ={"M1","M2","M3","M4","M5","M6","M7","M8"};
-      
-      for(int num=0; num<4; num++)//모터 각도 값을 문자열로 변환하고
-      {
-        sprintf(leftmotor[num],"%3d%c",pos[num],'°');
-        sprintf(rightmotor[num],"%3d%c",pos[num+4],'°');
-      }
-      
-      do{
-        for(line=0; line<4; line++)
-        {
-          u8g2.setCursor(0,   (line+1)*line_width);  u8g2.print(buf[line]);
-          u8g2.setCursor(27,  (line+1)*line_width);  u8g2.print(leftmotor[line]);
-          u8g2.setCursor(73,  (line+1)*line_width);  u8g2.print(buf[line+4]);
-          u8g2.setCursor(100, (line+1)*line_width);  u8g2.print(rightmotor[line]);
-        }
-      } while( u8g2.nextPage() );
-  }
+
   else if(st==SENSOR)
   {/***************************SENSOR INPUT DISPLAY***************************/
-      char sensor[8][5];//={0};
-      const char *sensorName[8] ={"G_x","G_y","G_z","G_a","E_L","E_R","P_L","P_R"};
-      
-        sprintf(sensor[0],"%4d",analogRead(A0));   sprintf(sensor[4],"%4d",analogRead(A4));
-        sprintf(sensor[1],"%4d",analogRead(A1));   sprintf(sensor[5],"%4d",analogRead(A5));
-        sprintf(sensor[2],"%4d",analogRead(A2));   sprintf(sensor[6],"%4d",analogRead(A0));
-        sprintf(sensor[3],"%4d",analogRead(A3));   sprintf(sensor[7],"%4d",  0);
-      do{
-        for(line=0; line<4; line++)
-        {
-          u8g2.setCursor(0,   (line+1)*line_width);  u8g2.print(sensorName[line]);
-          u8g2.setCursor(27,  (line+1)*line_width);  u8g2.print(sensor[line]);
-          u8g2.setCursor(73,  (line+1)*line_width);  u8g2.print(sensorName[line+4]);
-          u8g2.setCursor(100, (line+1)*line_width);  u8g2.print(sensor[line+4]);
-        }
-      } while( u8g2.nextPage() );
+    char sensor[8][5];//={0};
+    const char *sensorName[8] ={"G_x","G_y","G_z","G_a","E_L","E_R","P_L","P_R"};
+
+    for(int num=0; num<8; num++)
+      sprintf(sensor[num],"%4d",value[num]);
+      /*
+    sprintf(sensor[0],"%4d",value[0]);   sprintf(sensor[4],"%4d",value[4]);
+    sprintf(sensor[1],"%4d",value[1]);   sprintf(sensor[5],"%4d",value[5]);
+    sprintf(sensor[2],"%4d",value[2]);   sprintf(sensor[6],"%4d",value[6]);
+    sprintf(sensor[3],"%4d",value[3]);   sprintf(sensor[7],"%4d",value[7]);
+    */
+    for(line=0; line<4; line++)
+    {
+      u8g2.setCursor(0,   (line+1)*line_width);  u8g2.print(sensorName[line]);
+      u8g2.setCursor(27,  (line+1)*line_width);  u8g2.print(sensor[line]);
+      u8g2.setCursor(73,  (line+1)*line_width);  u8g2.print(sensorName[line+4]);
+      u8g2.setCursor(100, (line+1)*line_width);  u8g2.print(sensor[line+4]);
+    }
+  }
+  
+  else if(st==MOTOR)
+  {/**************************MOTOR DEGREE DISPLAY**************************/
+    char pos[8][6];//={0};//모터 각도 int=>string
+    const char *buf[8] ={"M1","M2","M3","M4","M5","M6","M7","M8"};
+    
+    for(int num=0; num<8; num++)//모터 각도 값을 문자열로 변환하고
+    {
+      sprintf(pos[num], "%4d%c",value[num+8],'°');
+    }
+    
+    for(line=0; line<4; line++)
+    {
+      u8g2.setCursor(0,   (line+1)*line_width);  u8g2.print(buf[line]);
+      u8g2.setCursor(22,  (line+1)*line_width);  u8g2.print(pos[line]);
+      u8g2.setCursor(73,  (line+1)*line_width);  u8g2.print(buf[line+4]);
+      u8g2.setCursor(95, (line+1)*line_width);  u8g2.print(pos[line+4]);
+    }
   }
 }//oled_display
