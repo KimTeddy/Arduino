@@ -42,8 +42,8 @@ void setup() {
 
 void loop() {
   if(brightness != (int)currentBrightness) {
-    //int progress = ((brightness - currentBrightness)>0) ? ((brightness - currentBrightness)/brightness) : ((currentBrightness - brightness)/brightness);
-    float plus = ((float)brightness - (float)currentBrightness)/(float)50;
+    float progress = ((brightness - currentBrightness)>0) ? ((float)brightness - (float)currentBrightness)/(float)brightness) : ((float)brightness - (float)currentBrightness)/(float)brightness);
+    float plus = ((float)brightness - (float)currentBrightness)/(float)(50*(1-progress));
     if(plus < 1 && plus > 0) plus = 1;
     else if(plus > -1 && plus < 0) plus = -1;
     currentBrightness += (int)plus;
@@ -88,14 +88,88 @@ void loop() {
   client.println("<html>");
   client.println("<head>");
   client.println("<style>");
-  client.println("input[type=range] { width: 80%; }");
-  client.println(".toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }");
-  client.println(".toggle-switch input { opacity: 0; width: 0; height: 0; }");
-  client.println(".slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }");
-  client.println(".slider:before { position: absolute; content: ''; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s; }");
-  client.println("input:checked + .slider { background-color: #2196F3; }");
-  client.println("input:focus + .slider { box-shadow: 0 0 1px #2196F3; }");
-  client.println("input:checked + .slider:before { transform: translateX(26px); }");
+  client.println("input[type=range] {");
+  client.println("  -webkit-appearance: none;");
+  client.println("  width: 80%;");
+  client.println("  height: 10px;");
+  client.println("  border-radius: 5px;");
+  client.println("  background: #d3d3d3;");
+  client.println("  outline: none;");
+  client.println("  opacity: 0.7;");
+  client.println("  -webkit-transition: 0.2s;");
+  client.println("  transition: opacity 0.2s;");
+  client.println("}");
+
+  client.println("input[type=range]:hover {");
+  client.println("  opacity: 1;");
+  client.println("}");
+
+  client.println("input[type=range]::-webkit-slider-thumb {");
+  client.println("  -webkit-appearance: none;");
+  client.println("  appearance: none;");
+  client.println("  width: 20px;");
+  client.println("  height: 20px;");
+  client.println("  border-radius: 50%;");
+  client.println("  background: #4CAF50;");
+  client.println("  cursor: pointer;");
+  client.println("}");
+
+  client.println("input[type=range]::-moz-range-thumb {");
+  client.println("  width: 20px;");
+  client.println("  height: 20px;");
+  client.println("  border-radius: 50%;");
+  client.println("  background: #4CAF50;");
+  client.println("  cursor: pointer;");
+  client.println("}");
+  
+  client.println(".toggle-switch {");
+  client.println("  position: relative;");
+  client.println("  display: inline-block;");
+  client.println("  width: 60px;");
+  client.println("  height: 34px;");
+  client.println("}");
+
+  client.println(".toggle-switch input {");
+  client.println("  opacity: 0;");
+  client.println("  width: 0;");
+  client.println("  height: 0;");
+  client.println("}");
+
+  client.println(".slider {");
+  client.println("  position: absolute;");
+  client.println("  cursor: pointer;");
+  client.println("  top: 0;");
+  client.println("  left: 0;");
+  client.println("  right: 0;");
+  client.println("  bottom: 0;");
+  client.println("  background-color: #ccc;");
+  client.println("  border-radius: 34px;");
+  client.println("  transition: .4s;");
+  client.println("}");
+
+  client.println(".slider:before {");
+  client.println("  position: absolute;");
+  client.println("  content: '';");
+  client.println("  height: 26px;");
+  client.println("  width: 26px;");
+  client.println("  left: 4px;");
+  client.println("  bottom: 4px;");
+  client.println("  background-color: white;");
+  client.println("  border-radius: 50%;");
+  client.println("  transition: .4s;");
+  client.println("}");
+
+  client.println("input:checked + .slider {");
+  client.println("  background-color: #2196F3;");
+  client.println("}");
+
+  client.println("input:focus + .slider {");
+  client.println("  box-shadow: 0 0 1px #2196F3;");
+  client.println("}");
+
+  client.println("input:checked + .slider:before {");
+  client.println("  transform: translateX(26px);");
+  client.println("}");
   client.println("</style>");
   client.println("</head>");
   client.println("<body>");
