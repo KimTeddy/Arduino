@@ -3,7 +3,7 @@
 const char* ssid = "galaxy";
 const char* password = "asdf1234";
 const int ledDesk = 5;
-int brightness = 0, prev_brightness;
+int brightness = 0, prev_brightness=255;
 unsigned int currentBrightness = 0;
 bool isLightOn=false;
 // Create an instance of the server
@@ -47,8 +47,8 @@ void loop() {
     float plus = diff/(float)(50);
     if(plus < 1 && plus > 0) plus = 1;
     else if(plus > -1 && plus < 0) plus = -1;
-    if(diff>1) plus = 10;
-    if(diff<-1) plus = -10;
+    if(diff>10) plus = 10;
+    if(diff<-10) plus = -10;
     currentBrightness += (int)plus;
 
     analogWrite(ledDesk, (int)(currentBrightness));
