@@ -4,7 +4,7 @@ const char* ssid = "galaxy";
 const char* password = "asdf1234";
 const int ledDesk = 5;
 int brightness = 0;
-int currentBrightness = 0;
+unsigned int currentBrightness = 0;
 bool isLightOn=false;
 // Create an instance of the server
 // specify the port to listen on as an argument
@@ -42,14 +42,20 @@ void setup() {
 
 void loop() {
   if(brightness != (int)currentBrightness) {
-    float progress = ((brightness - currentBrightness)>0) ? (((float)brightness - (float)currentBrightness)/(float)brightness) : ((float)brightness - (float)currentBrightness)/(float)brightness);
-    float plus = ((float)brightness - (float)currentBrightness)/(float)(50*(1-progress));
+    //float progress = ((brightness - currentBrightness)>0) ? ((brightness - currentBrightness)/brightness) : (((float)currentBrightness - (float)brightness)/(float)brightness);
+    float plus = ((float)brightness - (float)currentBrightness)/(float)(50);
     if(plus < 1 && plus > 0) plus = 1;
     else if(plus > -1 && plus < 0) plus = -1;
     currentBrightness += (int)plus;
+
+
+
+
+
     analogWrite(ledDesk, (int)(currentBrightness));
 
     Serial.print("currentBrightness: "); Serial.print(currentBrightness);
+    Serial.print("\tprogress: "); Serial.print(progress);
     Serial.print("\tplus: "); Serial.print(plus);
     Serial.print("\tbrightness: "); Serial.println(brightness);
     delay(1);
@@ -90,86 +96,26 @@ void loop() {
   client.println("<style>");
   client.println("input[type=range] {");
   client.println("  -webkit-appearance: none;");
-  client.println("  width: 80%;");
-  client.println("  height: 10px;");
-  client.println("  border-radius: 5px;");
-  client.println("  background: #d3d3d3;");
-  client.println("  outline: none;");
-  client.println("  opacity: 0.7;");
-  client.println("  -webkit-transition: 0.2s;");
-  client.println("  transition: opacity 0.2s;");
-  client.println("}");
-
-  client.println("input[type=range]:hover {");
-  client.println("  opacity: 1;");
+  client.println("  appearance: none;");
+  client.println("  width: 10px;");
+  client.println("  height: 80%;");
+  client.println("  margin: 0;");
+  client.println("  background-color: yellow;");
   client.println("}");
 
   client.println("input[type=range]::-webkit-slider-thumb {");
   client.println("  -webkit-appearance: none;");
   client.println("  appearance: none;");
-  client.println("  width: 20px;");
-  client.println("  height: 20px;");
-  client.println("  border-radius: 50%;");
-  client.println("  background: #4CAF50;");
+  client.println("  width: 50%;");
+  client.println("  height: 10px;");
+  client.println("  background-color: #4CAF50;");
   client.println("  cursor: pointer;");
   client.println("}");
 
-  client.println("input[type=range]::-moz-range-thumb {");
-  client.println("  width: 20px;");
-  client.println("  height: 20px;");
-  client.println("  border-radius: 50%;");
-  client.println("  background: #4CAF50;");
-  client.println("  cursor: pointer;");
-  client.println("}");
-  
-  client.println(".toggle-switch {");
-  client.println("  position: relative;");
-  client.println("  display: inline-block;");
-  client.println("  width: 60px;");
-  client.println("  height: 34px;");
+  client.println("input[type=range]:focus {");
+  client.println("  outline: none;");
   client.println("}");
 
-  client.println(".toggle-switch input {");
-  client.println("  opacity: 0;");
-  client.println("  width: 0;");
-  client.println("  height: 0;");
-  client.println("}");
-
-  client.println(".slider {");
-  client.println("  position: absolute;");
-  client.println("  cursor: pointer;");
-  client.println("  top: 0;");
-  client.println("  left: 0;");
-  client.println("  right: 0;");
-  client.println("  bottom: 0;");
-  client.println("  background-color: #ccc;");
-  client.println("  border-radius: 34px;");
-  client.println("  transition: .4s;");
-  client.println("}");
-
-  client.println(".slider:before {");
-  client.println("  position: absolute;");
-  client.println("  content: '';");
-  client.println("  height: 26px;");
-  client.println("  width: 26px;");
-  client.println("  left: 4px;");
-  client.println("  bottom: 4px;");
-  client.println("  background-color: white;");
-  client.println("  border-radius: 50%;");
-  client.println("  transition: .4s;");
-  client.println("}");
-
-  client.println("input:checked + .slider {");
-  client.println("  background-color: #2196F3;");
-  client.println("}");
-
-  client.println("input:focus + .slider {");
-  client.println("  box-shadow: 0 0 1px #2196F3;");
-  client.println("}");
-
-  client.println("input:checked + .slider:before {");
-  client.println("  transform: translateX(26px);");
-  client.println("}");
   client.println("</style>");
   client.println("</head>");
   client.println("<body>");
