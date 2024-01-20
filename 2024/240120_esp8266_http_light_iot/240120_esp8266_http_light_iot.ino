@@ -42,7 +42,7 @@ void setup() {
 
 void loop() {
   if(brightness != (int)currentBrightness) {
-    float progress = ((brightness - currentBrightness)>0) ? ((float)brightness - (float)currentBrightness)/(float)brightness) : ((float)brightness - (float)currentBrightness)/(float)brightness);
+    float progress = ((brightness - currentBrightness)>0) ? (((float)brightness - (float)currentBrightness)/(float)brightness) : ((float)brightness - (float)currentBrightness)/(float)brightness);
     float plus = ((float)brightness - (float)currentBrightness)/(float)(50*(1-progress));
     if(plus < 1 && plus > 0) plus = 1;
     else if(plus > -1 && plus < 0) plus = -1;
