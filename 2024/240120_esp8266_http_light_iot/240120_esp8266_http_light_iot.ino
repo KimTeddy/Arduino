@@ -5,7 +5,7 @@ const char* password = "asdf1234";
 const int ledDesk = 5;
 int brightness = 0;
 int currentBrightness = 0;
-
+bool isLightOn=false;
 // Create an instance of the server
 // specify the port to listen on as an argument
 WiFiServer server(80);
@@ -86,29 +86,36 @@ void loop() {
 
   client.println("<!DOCTYPE HTML>");
   client.println("<html>");
-
   client.println("<head>");
-  // Add a style section to set the width of the range input
   client.println("<style>");
   client.println("input[type=range] { width: 80%; }");
+  client.println(".toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }");
+  client.println(".toggle-switch input { opacity: 0; width: 0; height: 0; }");
+  client.println(".slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }");
+  client.println(".slider:before { position: absolute; content: ''; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s; }");
+  client.println("input:checked + .slider { background-color: #2196F3; }");
+  client.println("input:focus + .slider { box-shadow: 0 0 1px #2196F3; }");
+  client.println("input:checked + .slider:before { transform: translateX(26px); }");
   client.println("</style>");
   client.println("</head>");
-
   client.println("<body>");
   client.println("<br />");
-  client.println("<FORM method=\"get\" action=\"/led.cgi\">");
+  client.println("<form method=\"get\" action=\"/led.cgi\">");
+  client.println("<p> Brightness : <input type=\"range\" name=\"status\" min=\"0\" max=\"255\" value=\"" + String(brightness) + "\" onchange=\"updateBrightness(this.value)\">");
+  client.println("<p> <label class=\"toggle-switch\"><input type=\"checkbox\" name=\"toggle\" value=\"on\" " + String(isLightOn ? "checked" : "") + " onchange=\"toggleLight(this)\"><span class=\"slider\"></span></label> Light On/Off");
+  client.println("</form>");
 
-  // Use JavaScript to update brightness in real-time
-  client.println("<P> Brightness : <INPUT type=\"range\" name=\"status\" min=\"0\" max=\"255\" value=\"" + String(brightness) + "\" onchange=\"updateBrightness(this.value)\">");
-
-  client.println("<P> <INPUT type=\"button\" name=\"status\" value=\"0\">OFF");
-  client.println("</FORM>");
-
-  // JavaScript function to update brightness
   client.println("<script>");
   client.println("function updateBrightness(value) {");
   client.println("  var xhttp = new XMLHttpRequest();");
   client.println("  xhttp.open('GET', '/led.cgi?status=' + value, true);");
+  client.println("  xhttp.send();");
+  client.println("}");
+
+  client.println("function toggleLight(checkbox) {");
+  client.println("  var xhttp = new XMLHttpRequest();");
+  client.println("  var status = checkbox.checked ? 'on' : 'off';");
+  client.println("  xhttp.open('GET', '/led.cgi?toggle=' + status, true);");
   client.println("  xhttp.send();");
   client.println("}");
   client.println("</script>");
