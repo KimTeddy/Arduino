@@ -86,6 +86,14 @@ void loop() {
 
   client.println("<!DOCTYPE HTML>");
   client.println("<html>");
+
+  client.println("<head>");
+  // Add a style section to set the width of the range input
+  client.println("<style>");
+  client.println("input[type=range] { width: 80%; }");
+  client.println("</style>");
+  client.println("</head>");
+
   client.println("<body>");
   client.println("<br />");
   client.println("<FORM method=\"get\" action=\"/led.cgi\">");
